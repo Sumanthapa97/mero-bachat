@@ -1,0 +1,235 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ne">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Mero Bachat</title>
+
+<style>
+
+body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:16px;color:#172033}
+
+main{max-width:600px;margin:auto}
+
+header{background:#14532d;color:white;padding:22px;border-radius:16px}
+
+h1{margin:0 0 8px}
+
+.card{background:white;padding:16px;border-radius:14px;margin-top:14px;box-shadow:0 2px 8px #0001}
+
+label{display:block;margin:12px 0 6px;font-weight:bold}
+
+input,select,textarea,button{box-sizing:border-box;width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:16px}
+
+button{background:#15803d;color:white;border:0;font-weight:bold;margin-top:12px}
+
+.stat{font-size:24px;font-weight:bold;margin-top:6px}
+
+.small{color:#64748b;font-size:14px}
+
+</style>
+
+</head>
+
+<body>
+
+<main>
+
+<header>
+
+<h1>💰 मेरो बचत</h1>
+
+<p>२४ महिनाको बचत व्यवस्थापन</p>
+
+<div>मासिक लक्ष्य: रु. ४,००,०००</div>
+
+<div>कुल लक्ष्य: रु. ९६,००,०००</div>
+
+</header>
+
+<div class="card">
+
+<h2>महिनाको बचत लेख्नुहोस्</h2>
+
+<label for="month">महिना छान्नुहोस्</label>
+
+<select id="month"></select>
+
+<label for="amount">यस महिनाको बचत (नेपाली रुपैयाँ)</label>
+
+<input id="amount" type="number" min="0" placeholder="जस्तै: 400000">
+
+<label for="note">कैफियत (वैकल्पिक)</label>
+
+<textarea id="note" rows="2" placeholder="बचतबारे केही लेख्नुहोस्"></textarea>
+
+<button onclick="save()">बचत सुरक्षित गर्नुहोस्</button>
+
+<p id="message"></p>
+
+</div>
+
+<div class="card">
+
+<h2>यो महिनाको हिसाब</h2>
+
+<p>मासिक लक्ष्य</p><div class="stat">रु. ४,००,०००</div>
+
+<p>बचत गरिएको</p><div class="stat" id="current">रु. ०</div>
+
+<p id="difference">बाँकी लक्ष्य: रु. ४,००,०००</p>
+
+</div>
+
+<div class="card">
+
+<h2>२४ महिनाको प्रगति</h2>
+
+<p>कुल बचत</p><div class="stat" id="total">रु. ०</div>
+
+<p>कुल लक्ष्य</p><div>रु. ९६,००,०००</div>
+
+<p id="progress">लक्ष्य पूरा: ०%</p>
+
+<progress id="bar" value="0" max="100" style="width:100%;height:20px"></progress>
+
+<p id="shortfall"></p>
+
+<button onclick="exportCSV()">बचत विवरण डाउनलोड (CSV)</button>
+
+</div>
+
+<p class="small">बचत विवरण यही ब्राउजरमा सुरक्षित हुन्छ। ब्राउजरको डाटा नमेटाउनुहोस्।</p>
+
+</main>
+
+<script>
+
+const target=400000;
+
+const key="meroBachat24";
+
+let data={};
+
+try{data=JSON.parse(localStorage.getItem(key)||"{}")}catch(e){data={}}
+
+const month=document.getElementById("month");
+
+for(let i=1;i<=24;i++){
+
+ const op=document.createElement("option");
+
+ op.value=i;op.textContent="महिना "+i;
+
+ month.appendChild(op);
+
+}
+
+month.addEventListener("change",load);
+
+function money(n){return "रु. "+Math.round(n).toLocaleString("en-US")}
+
+function load(){
+
+ const d=data[month.value]||{};
+
+ document.getElementById("amount").value=d.amount??"";
+
+ document.getElementById("note").value=d.note||"";
+
+ document.getElementById("current").textContent=money(Number(d.amount)||0);
+
+ const diff=target-(Number(d.amount)||0);
+
+ document.getElementById("difference").textContent=
+
+ diff>0?"लक्ष्यभन्दा कमी: "+money(diff):
+
+ diff<0?"लक्ष्यभन्दा बढी: "+money(-diff):"मासिक लक्ष्य पूरा भयो!";
+
+ update();
+
+}
+
+function save(){
+
+ const amount=Number(document.getElementById("amount").value);
+
+ if(document.getElementById("amount").value===""||amount<0){
+
+  document.getElementById("message").textContent="कृपया सही बचत रकम लेख्नुहोस्।";return;
+
+ }
+
+ data[month.value]={amount:amount,note:document.getElementById("note").value};
+
+ try{localStorage.setItem(key,JSON.stringify(data));
+
+ document.getElementById("message").textContent="✅ बचत सुरक्षित भयो!";
+
+ load();}catch(e){
+
+ document.getElementById("message").textContent="डाटा सुरक्षित हुन सकेन।";
+
+ }
+
+}
+
+function update(){
+
+ let total=0;
+
+ for(let i=1;i<=24;i++)total+=Number(data[i]?.amount)||0;
+
+ const pct=Math.min(100,total/9600000*100);
+
+ document.getElementById("total").textContent=money(total);
+
+ document.getElementById("progress").textContent="लक्ष्य पूरा: "+pct.toFixed(1)+"%";
+
+ document.getElementById("bar").value=pct;
+
+ document.getElementById("shortfall").textContent=
+
+ total<9600000?"कुल लक्ष्यसम्म बाँकी: "+money(9600000-total):
+
+ "🎉 २४ महिनाको कुल बचत लक्ष्य पूरा भयो!";
+
+}
+
+function exportCSV(){
+
+ let csv="महिना,लक्ष्य,बचत,फरक,कैफियत\n";
+
+ for(let i=1;i<=24;i++){
+
+  const d=data[i]||{},a=Number(d.amount)||0;
+
+  const note=String(d.note||"").replace(/"/g,'""');
+
+  csv+=[i,target,a,a-target,'"'+note+'"'].join(",")+"\n";
+
+ }
+
+ const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+
+ a.href=url;a.download="mero-bachat.csv";a.click();URL.revokeObjectURL(url);
+
+}
+
+load();
+
+</script>
+
+</body>
+
+</html>
