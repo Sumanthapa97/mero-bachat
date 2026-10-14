@@ -1,35 +1,169 @@
 <!DOCTYPE html>
 <html lang="ne">
 <head>
-
-<head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Mero Bachat</title>
 
 <style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f1f5f9;
+  margin: 0;
+  padding: 16px;
+  color: #172033;
+}
+main {
+  max-width: 600px;
+  margin: auto;
+}
+header {
+  background: #14532d;
+  color: white;
+  padding: 22px;
+  border-radius: 16px;
+}
+.card {
+  background: white;
+  padding: 16px;
+  border-radius: 14px;
+  margin-top: 14px;
+  box-shadow: 0 2px 8px #0001;
+}
+label {
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: bold;
+}
+input, button {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  font-size: 16px;
+}
+button {
+  background: #15803d;
+  color: white;
+  border: none;
+  margin-top: 14px;
+}
+.result {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 12px;
+}
+</style>
+</head>
 
-body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:16px;color:#172033}
+<body>
+<main>
+<header>
+<h1>मेरो बचत</h1>
+<p>२४ महिनाको बचत व्यवस्थापन</p>
+<p>मासिक लक्ष्य: रु. ४,००,०००</p>
+</header>
 
-main{max-width:600px;margin:auto}
+<div class="card">
+<h2>महिनाको बचत राख्नुहोस्</h2>
 
-header{background:#14532d;color:white;padding:22px;border-radius:16px}
+<label>महिना छान्नुहोस्</label>
+<select id="month">
+</select>
 
-h1{margin:0 0 8px}
+<label>जम्मा बचत (रु.)</label>
+<input id="saving" type="number" min="0"
+placeholder="बचत रकम लेख्नुहोस्">
 
-.card{background:white;padding:16px;border-radius:14px;margin-top:14px;box-shadow:0 2px 8px #0001}
+<button onclick="save()">बचत सुरक्षित गर्नुहोस्</button>
 
-label{display:block;margin:12px 0 6px;font-weight:bold}
+<div id="result" class="result"></div>
+</div>
 
-input,select,textarea,button{box-sizing:border-box;width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:16px}
+<div class="card">
+<h2>बचत विवरण</h2>
+<p id="total">कुल बचत: रु. ०</p>
+<p id="difference">लक्ष्यसम्म बाँकी: रु. ९६,००,०००</p>
+<div id="details"></div>
+</div>
+</main>
 
-button{background:#15803d;color:load();
+<script>
+const target = 400000;
+const months = 24;
+let savings = JSON.parse(
+  localStorage.getItem("meroBachat") || "[]"
+);
 
+const select = document.getElementById("month");
+
+for (let i = 1; i <= months; i++) {
+  const option = document.createElement("option");
+  option.value = i;
+  option.textContent = "महिना " + i;
+  select.appendChild(option);
+}
+
+function save() {
+  const month = Number(select.value);
+  const amount = Number(document.getElementById("saving").value);
+
+  if (!Number.isFinite(amount) || amount < 0 ||
+      document.getElementById("saving").value === "") {
+    alert("कृपया सही बचत रकम लेख्नुहोस्।");
+    return;
+  }
+
+  savings[month - 1] = amount;
+  localStorage.setItem("meroBachat", JSON.stringify(savings));
+
+  document.getElementById("result").textContent =
+    amount < target
+      ? "लक्ष्यभन्दा कमी: रु. " + (target - amount).toLocaleString("en-IN")
+      : amount > target
+      ? "लक्ष्यभन्दा बढी: रु. " + (amount - target).toLocaleString("en-IN")
+      : "मासिक लक्ष्य पूरा भयो!";
+
+  render();
+}
+
+function render() {
+  let total = 0;
+  let details = "";
+
+  for (let i = 0; i < months; i++) {
+    const amount = Number(savings[i]) || 0;
+    total += amount;
+
+    details += "<p>महिना " + (i + 1) +
+      ": रु. " + amount.toLocaleString("en-IN") +
+      " | " + (amount < target ? "कमी: " +
+      (target - amount).toLocaleString("en-IN") :
+      amount > target ? "बढी: " +
+      (amount - target).toLocaleString("en-IN") :
+      "लक्ष्य पूरा") + "</p>";
+  }
+
+  document.getElementById("total").textContent =
+    "कुल बचत: रु. " + total.toLocaleString("en-IN");
+
+  document.getElementById("difference").textContent =
+    total < target * months
+      ? "लक्ष्यसम्म बाँकी: रु. " +
+        (target * months - total).toLocaleString("en-IN")
+      : "कुल बचत लक्ष्य पूरा भयो!";
+
+  document.getElementById("details").innerHTML = details;
+}
+
+select.addEventListener("change", function() {
+  const amount = savings[Number(select.value) - 1];
+  document.getElementById("saving").value =
+    amount === undefined ? "" : amount;
+});
+
+render();
 </script>
-
 </body>
-
 </html>
